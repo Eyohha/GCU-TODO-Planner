@@ -2,13 +2,14 @@ package com.todo.planner.data.entity;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "tasks",
         foreignKeys = @ForeignKey(entity = Category.class,
                 parentColumns = "id",
                 childColumns = "categoryId",
-                onDelete = ForeignKey.CASCADE))
+                onDelete = ForeignKey.CASCADE), indices = {@Index("categoryId")})
 public class Task {
     @PrimaryKey(autoGenerate = true)
     private int id;
