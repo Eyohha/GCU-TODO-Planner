@@ -68,7 +68,39 @@ public class CategoryDialogFragment extends DialogFragment {
                 Toast.makeText(getContext(), "Category name is required", Toast.LENGTH_SHORT).show();
                 return;
             }
-        }
 
+            CategoryDialogListener listener = (CategoryDialogListener) requireActivity();
+
+            if (existingCategory != null) {
+                existingCategory.setName(name);
+                listener.onCategorySaved(existingCategory);
+            } else {
+                listener.onCategorySaved(new Category(name));
+            }
+
+            dismiss();
+        });
+
+        binding.deleteButton.setOnClickListener(v -> {
+            if (existingCategory != null) {
+                // Show confirmation dialog before deleting
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Delete Category")
+                        .setMessage("Are you sure you want to delete this category? All associated tasks will also be deleted.")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            CategoryDialogListener listener = (CategoryDialogListener) requireActivity();
+                            listener.onCategoryDeleted(existingCategory);
+                            dismiss();
+                        })
+                        .setNegativeButton("Keep", null)
+                        .show();
+            }
+        });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 }
