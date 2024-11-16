@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -25,11 +26,20 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+        <!-- Enhanced HorizontalScrollView for touch -->
         <HorizontalScrollView
             android:id="@+id/categoryScrollView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="none"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:clipToPadding="false"
+            android:requiresFadingEdge="horizontal"
+            android:fadingEdgeLength="32dp"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="ifContentScrolls"
+            android:touchscreenBlocksFocus="false"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.chip.ChipGroup
@@ -37,7 +47,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="8dp"
-                app:singleSelection="true">
+                app:singleSelection="true"
+                app:chipSpacing="8dp">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipAll"
@@ -45,7 +56,9 @@
                     android:layout_height="wrap_content"
                     android:text="All"
                     android:checkable="true"
-                    android:checked="true"/>
+                    android:checked="true"
+                    android:minHeight="48dp"
+                    android:textSize="16sp"/>
 
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
@@ -56,6 +69,8 @@
             android:layout_height="0dp"
             android:padding="8dp"
             android:clipToPadding="false"
+            android:nestedScrollingEnabled="true"
+            android:overScrollMode="ifContentScrolls"
             app:layout_constraintTop_toBottomOf="@id/categoryScrollView"
             app:layout_constraintBottom_toBottomOf="parent"/>
 
@@ -65,6 +80,8 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:src="@drawable/ic_add"
+            android:focusable="true"
+            android:clickable="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:tint="@color/white"

@@ -83,21 +83,26 @@ public class CategoryDialogFragment extends DialogFragment {
 
         binding.deleteButton.setOnClickListener(v -> {
             if (existingCategory != null) {
-                // Show confirmation dialog before deleting
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Delete Category")
                         .setMessage("Are you sure you want to delete this category? All associated tasks will also be deleted.")
                         .setPositiveButton("Delete", (dialog, which) -> {
                             CategoryDialogListener listener = (CategoryDialogListener) requireActivity();
                             listener.onCategoryDeleted(existingCategory);
-                            dismiss();
+                            dialog.dismiss();  // Dismiss the alert dialog
+                            dismiss();         // Dismiss the category dialog
                         })
-                        .setNegativeButton("Keep", null)
+                        .setNegativeButton("Keep", (dialog, which) -> {
+                            dialog.dismiss();  // Just dismiss the alert dialog
+                            dismiss();         // Also dismiss the category dialog
+                        })
                         .show();
             }
         });
     }
 
+    //prevent memory leaks by setting the objs held by binding to null.
+    //Memory leak is when a program retains unnecessary data
     @Override
     public void onDestroyView() {
         super.onDestroyView();

@@ -1,7 +1,10 @@
 package com.todo.planner.ui.activities;
 
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.HapticFeedbackConstants;
 import android.view.View;
 import android.widget.Toast;
 
@@ -71,7 +74,8 @@ public class MainActivity extends AppCompatActivity implements
         // Add the "All" chip
         binding.chipAll.setChipBackgroundColor(chipColorStates);
         binding.chipAll.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
-        binding.chipAll.setChecked(true);  // Set "All" as initially selected
+        binding.chipAll.setChecked(true);
+        binding.chipAll.setMinHeight(getDimensionInPixel(48)); // Ensure touch target size
         binding.chipAll.setOnClickListener(v -> {
             viewModel.setCurrentCategoryId(-1);
             observeTasksByCategory(-1);
@@ -89,16 +93,19 @@ public class MainActivity extends AppCompatActivity implements
                 chip.setClickable(true);
                 chip.setChipBackgroundColor(chipColorStates);
                 chip.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
-
-                // Set checked if this is the current category
+                chip.setMinHeight(getDimensionInPixel(48)); // Ensures touch target size
+                chip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
                 chip.setChecked(viewModel.getCurrentCategoryId() == category.getId());
 
+                // Enhanced touch handling
                 chip.setOnClickListener(v -> {
+                    v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                     viewModel.setCurrentCategoryId(category.getId());
                     observeTasksByCategory(category.getId());
                 });
 
                 chip.setOnLongClickListener(v -> {
+                    v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                     showCategoryDialog(category);
                     return true;
                 });
@@ -113,12 +120,26 @@ public class MainActivity extends AppCompatActivity implements
             addCategoryChip.setClickable(true);
             addCategoryChip.setChipBackgroundColor(ColorStateList.valueOf(getResources().getColor(R.color.primary_blue, null)));
             addCategoryChip.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
-            addCategoryChip.setOnClickListener(v -> showCategoryDialog(null));
+            addCategoryChip.setMinHeight(getDimensionInPixel(48));
+            addCategoryChip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            addCategoryChip.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                showCategoryDialog(null);
+            });
             binding.categoryChipGroup.addView(addCategoryChip);
         });
 
         // Set single selection mode for the chip group
         binding.categoryChipGroup.setSingleSelection(true);
+    }
+
+    // Helper method to convert dp to pixels
+    private int getDimensionInPixel(int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                getResources().getDisplayMetrics()
+        );
     }
 
     private void setupFab() {
