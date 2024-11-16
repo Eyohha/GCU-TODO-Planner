@@ -41,7 +41,7 @@ public class TodoRepository {
     }
 
     public void getCategoryByName(String name, OnCategoryFoundListener listener) {
-        executorService.execute(() -> {
+        TodoDatabase.databaseWriteExecutor.execute(() -> {
             Category category = categoryDao.getCategoryByName(name);
             new Handler(Looper.getMainLooper()).post(() -> listener.onCategoryFound(category));
         });
@@ -76,13 +76,23 @@ public class TodoRepository {
 
     private final Map<Integer, List<Task>> taskCache = new ConcurrentHashMap<>();
 
+//    public void insertTask(Task task) {
+//        executorService.execute(() -> {
+//            taskDao.insert(task);
+//            // Update cache
+//            List<Task> cachedTasks = taskCache.getOrDefault(task.getCategoryId(), new ArrayList<>());
+//            cachedTasks.add(task);
+//            taskCache.put(task.getCategoryId(), cachedTasks);
+//        });
+//    }
+
     public void insertTask(Task task) {
         executorService.execute(() -> {
             taskDao.insert(task);
-            // Update cache
-            List<Task> cachedTasks = taskCache.getOrDefault(task.getCategoryId(), new ArrayList<>());
-            cachedTasks.add(task);
-            taskCache.put(task.getCategoryId(), cachedTasks);
+            // Refresh cache to avoid stale data
+            taskCache.remove(task.getCategoryId());
+            List<Task> updatedTasks = taskDao.getTasksByCategory(task.getCategoryId()).getValue();
+            taskCache.put(task.getCategoryId(), updatedTasks != null ? updatedTasks : new ArrayList<>());
         });
     }
 

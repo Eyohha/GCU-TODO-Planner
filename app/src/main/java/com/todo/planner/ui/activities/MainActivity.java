@@ -182,12 +182,18 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void observeTasksByCategory(int categoryId) {
-        // Remove previous observer
+        // Remove previous observer if exists
         if (viewModel.getAllTasks().hasObservers()) {
             viewModel.getAllTasks().removeObservers(this);
         }
 
-        LiveData<List<Task>> tasksLiveData = viewModel.getTasksByCategory(categoryId);
+        LiveData<List<Task>> tasksLiveData;
+        if (categoryId == -1) {
+            tasksLiveData = viewModel.getAllTasks();
+        } else {
+            tasksLiveData = viewModel.getTasksByCategory(categoryId);
+        }
+
         tasksLiveData.observe(this, tasks -> {
             updateEmptyState(tasks);
             taskAdapter.submitList(tasks != null ? new ArrayList<>(tasks) : null);
@@ -263,21 +269,19 @@ public class MainActivity extends AppCompatActivity implements
     // AddEditTaskDialogFragment.TaskDialogListener implementations
     @Override
     public void onTaskSaved(Task task) {
-        // If no category is selected, use PERSONAL
-        if (task.getCategoryId() == 0) {
+        int categoryId = selectedCategory != null ? selectedCategory.getId() : 0;
+        if (task.getId() == 0) {
+            // New task
             viewModel.insertTask(
                     task.getTitle(),
                     task.getDescription(),
                     task.getDueDate(),
-                    0  // This will trigger the default PERSONAL category logic
+                    categoryId
             );
         } else {
-            viewModel.insertTask(
-                    task.getTitle(),
-                    task.getDescription(),
-                    task.getDueDate(),
-                    task.getCategoryId()
-            );
+            // Existing task
+            task.setCategoryId(categoryId);
+            viewModel.updateTask(task);
         }
     }
 

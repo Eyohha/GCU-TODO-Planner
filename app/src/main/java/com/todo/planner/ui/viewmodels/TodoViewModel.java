@@ -53,21 +53,44 @@ public class TodoViewModel extends AndroidViewModel {
         return allTasks;
     }
 
-    public LiveData<List<Task>> getTasksByCategory(int categoryId) {
-        if (categoryId == -1) {
-            return allTasks;
-        }
+//    public LiveData<List<Task>> getTasksByCategory(int categoryId) {
+//        currentCategoryId = categoryId;  // Save the current category
+//        if (categoryId == -1) {
+//            return allTasks;
+//        }
+//        return repository.getTasksByCategory(categoryId);
+//    }
 
-        // Create a filtered list
-        repository.getTasksByCategory(categoryId).observeForever(tasks -> {
-            filteredTasks.setValue(tasks);
-        });
-        return filteredTasks;
+    public LiveData<List<Task>> getTasksByCategory(int categoryId) {
+        return repository.getTasksByCategory(categoryId);
     }
 
+//    public void insertTask(String title, String description, String dueDate, int categoryId) {
+//        // If no category selected, use the current category or default to PERSONAL
+//        if (categoryId == 0) {
+//            if (currentCategoryId > 0) {
+//                // Use currently selected category
+//                Task task = new Task(title, description, dueDate, currentCategoryId);
+//                repository.insertTask(task);
+//            } else {
+//                // Default to PERSONAL category
+//                repository.getCategoryByName("PERSONAL", personalCategory -> {
+//                    if (personalCategory != null) {
+//                        Task task = new Task(title, description, dueDate, personalCategory.getId());
+//                        repository.insertTask(task);
+//                    }
+//                });
+//            }
+//        } else {
+//            // Use specified category
+//            Task task = new Task(title, description, dueDate, categoryId);
+//            repository.insertTask(task);
+//        }
+//    }
+
     public void insertTask(String title, String description, String dueDate, int categoryId) {
-        // If no category selected, get PERSONAL category ID
         if (categoryId == 0) {
+            // Default to PERSONAL category if categoryId is not provided
             repository.getCategoryByName("PERSONAL", personalCategory -> {
                 if (personalCategory != null) {
                     Task task = new Task(title, description, dueDate, personalCategory.getId());
@@ -75,6 +98,7 @@ public class TodoViewModel extends AndroidViewModel {
                 }
             });
         } else {
+            // Use the specified categoryId
             Task task = new Task(title, description, dueDate, categoryId);
             repository.insertTask(task);
         }

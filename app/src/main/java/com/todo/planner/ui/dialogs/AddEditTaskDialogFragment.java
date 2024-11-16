@@ -91,6 +91,9 @@ public class AddEditTaskDialogFragment extends DialogFragment {
                     args.getInt("categoryId")
             );
             existingTask.setId(args.getInt("taskId"));
+
+            // Focus on the description field for subtasks
+            binding.taskDescriptionInput.requestFocus();
         }
     }
 
@@ -103,7 +106,7 @@ public class AddEditTaskDialogFragment extends DialogFragment {
             );
             binding.categorySpinner.setAdapter(adapter);
 
-            // Set default or existing category
+            // Set the category based on existingTask or default to PERSONAL
             Bundle args = getArguments();
             if (args != null) {
                 int categoryId = existingTask != null ?
@@ -114,14 +117,6 @@ public class AddEditTaskDialogFragment extends DialogFragment {
                     for (int i = 0; i < categories.size(); i++) {
                         if (categories.get(i).getId() == categoryId) {
                             binding.categorySpinner.setText(categories.get(i).toString(), false);
-                            break;
-                        }
-                    }
-                } else {
-                    // Set PERSONAL as default
-                    for (Category category : categories) {
-                        if (category.getName().equals("PERSONAL")) {
-                            binding.categorySpinner.setText(category.toString(), false);
                             break;
                         }
                     }
@@ -155,21 +150,30 @@ public class AddEditTaskDialogFragment extends DialogFragment {
                 return;
             }
 
-            Category selectedCategory = (Category) binding.categorySpinner.getAdapter().getItem(0);
+            // Get the selected category
+            Category selectedCategory = null;
+            if (binding.categorySpinner.getAdapter() != null) {
+                selectedCategory = (Category) binding.categorySpinner.getAdapter().getItem(0);
+            }
 
-            Task task;
+            if (selectedCategory == null) {
+                binding.categorySpinner.setError("Category is required");
+                return;
+            }
+
+            // Update the existing task or create a new one
             if (existingTask != null) {
                 existingTask.setTitle(title);
                 existingTask.setDescription(description);
                 existingTask.setDueDate(dueDate);
-                existingTask.setCategoryId(selectedCategory.getId());
-                task = existingTask;
+                existingTask.setCategoryId(selectedCategory.getId()); // Update category
             } else {
-                task = new Task(title, description, dueDate, selectedCategory.getId());
+                existingTask = new Task(title, description, dueDate, selectedCategory.getId());
             }
 
+            // Pass the updated task to the listener
             TaskDialogListener listener = (TaskDialogListener) requireActivity();
-            listener.onTaskSaved(task);
+            listener.onTaskSaved(existingTask);
             dismiss();
         });
     }

@@ -147,10 +147,12 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
                         } else if (itemId == R.id.action_delete) {
                             listener.onTaskDelete(task);
                             return true;
-                        } else if (itemId == R.id.action_add_subtask) {
-                            listener.onAddSubtask(task);
-                            return true;
-                        }
+                       }
+//
+//                        else if (itemId == R.id.action_add_subtask) {
+//                            listener.onAddSubtask(task);
+//                            return true;
+//                        }
                         return false;
                     });
                 }
