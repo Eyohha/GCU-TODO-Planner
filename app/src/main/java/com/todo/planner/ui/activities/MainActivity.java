@@ -1,10 +1,12 @@
 package com.todo.planner.ui.activities;
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -36,7 +38,9 @@ public class MainActivity extends AppCompatActivity implements
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
+//        setSupportActionBar(binding.toolbar);
+        Toolbar toolbar = binding.toolbar;
+        setSupportActionBar(toolbar);
 
         viewModel = new ViewModelProvider(this).get(TodoViewModel.class);
         setupRecyclerView();
@@ -52,7 +56,22 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void setupCategoryChips() {
+        // Create color state list for chips
+        ColorStateList chipColorStates = new ColorStateList(
+                new int[][] {
+                        new int[] { android.R.attr.state_checked },  // Checked state
+                        new int[] { -android.R.attr.state_checked }  // Unchecked state
+                },
+                new int[] {
+                        getResources().getColor(R.color.primary_blue, null),  // Color for checked state
+                        getResources().getColor(R.color.medium_gray, null)     // Color for unchecked state
+                }
+        );
+
         // Add the "All" chip
+        binding.chipAll.setChipBackgroundColor(chipColorStates);
+        binding.chipAll.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
+        binding.chipAll.setChecked(true);  // Set "All" as initially selected
         binding.chipAll.setOnClickListener(v -> {
             viewModel.setCurrentCategoryId(-1);
             observeTasksByCategory(-1);
@@ -67,23 +86,39 @@ public class MainActivity extends AppCompatActivity implements
                 Chip chip = new Chip(this);
                 chip.setText(category.getName());
                 chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipBackgroundColor(chipColorStates);
+                chip.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
+
+                // Set checked if this is the current category
+                chip.setChecked(viewModel.getCurrentCategoryId() == category.getId());
+
                 chip.setOnClickListener(v -> {
                     viewModel.setCurrentCategoryId(category.getId());
                     observeTasksByCategory(category.getId());
                 });
+
                 chip.setOnLongClickListener(v -> {
                     showCategoryDialog(category);
                     return true;
                 });
+
                 binding.categoryChipGroup.addView(chip);
             }
+
+            // Add the "+ Category" chip
+            Chip addCategoryChip = new Chip(this);
+            addCategoryChip.setText("+ Category");
+            addCategoryChip.setCheckable(false);
+            addCategoryChip.setClickable(true);
+            addCategoryChip.setChipBackgroundColor(ColorStateList.valueOf(getResources().getColor(R.color.primary_blue, null)));
+            addCategoryChip.setTextColor(ColorStateList.valueOf(getResources().getColor(R.color.white, null)));
+            addCategoryChip.setOnClickListener(v -> showCategoryDialog(null));
+            binding.categoryChipGroup.addView(addCategoryChip);
         });
 
-        // Add category button
-        Chip addCategoryChip = new Chip(this);
-        addCategoryChip.setText("+ Category");
-        addCategoryChip.setOnClickListener(v -> showCategoryDialog(null));
-        binding.categoryChipGroup.addView(addCategoryChip);
+        // Set single selection mode for the chip group
+        binding.categoryChipGroup.setSingleSelection(true);
     }
 
     private void setupFab() {
