@@ -32,6 +32,10 @@ public class AddEditTaskDialogFragment extends DialogFragment {
     }
 
     public static AddEditTaskDialogFragment newInstance(Task task) {
+        return newInstance(task, 0); // Default category ID as 0
+    }
+
+    public static AddEditTaskDialogFragment newInstance(Task task, int defaultCategoryId) {
         AddEditTaskDialogFragment fragment = new AddEditTaskDialogFragment();
         Bundle args = new Bundle();
         if (task != null) {
@@ -41,6 +45,8 @@ public class AddEditTaskDialogFragment extends DialogFragment {
             args.putString("description", task.getDescription());
             args.putString("dueDate", task.getDueDate());
             args.putInt("categoryId", task.getCategoryId());
+        } else {
+            args.putInt("defaultCategoryId", defaultCategoryId);
         }
         fragment.setArguments(args);
         return fragment;
@@ -97,12 +103,27 @@ public class AddEditTaskDialogFragment extends DialogFragment {
             );
             binding.categorySpinner.setAdapter(adapter);
 
-            if (existingTask != null) {
-                // Set selected category for existing task
-                for (int i = 0; i < categories.size(); i++) {
-                    if (categories.get(i).getId() == existingTask.getCategoryId()) {
-                        binding.categorySpinner.setText(categories.get(i).toString(), false);
-                        break;
+            // Set default or existing category
+            Bundle args = getArguments();
+            if (args != null) {
+                int categoryId = existingTask != null ?
+                        args.getInt("categoryId") :
+                        args.getInt("defaultCategoryId", 0);
+
+                if (categoryId != 0) {
+                    for (int i = 0; i < categories.size(); i++) {
+                        if (categories.get(i).getId() == categoryId) {
+                            binding.categorySpinner.setText(categories.get(i).toString(), false);
+                            break;
+                        }
+                    }
+                } else {
+                    // Set PERSONAL as default
+                    for (Category category : categories) {
+                        if (category.getName().equals("PERSONAL")) {
+                            binding.categorySpinner.setText(category.toString(), false);
+                            break;
+                        }
                     }
                 }
             }

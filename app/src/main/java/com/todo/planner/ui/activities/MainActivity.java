@@ -10,7 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.chip.Chip;
@@ -24,6 +26,7 @@ import com.todo.planner.ui.dialogs.AddEditTaskDialogFragment;
 import com.todo.planner.ui.dialogs.CategoryDialogFragment;
 import com.todo.planner.ui.viewmodels.TodoViewModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
@@ -34,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements
     private ActivityMainBinding binding;
     private TodoViewModel viewModel;
     private TaskAdapter taskAdapter;
+    private Category selectedCategory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +58,13 @@ public class MainActivity extends AppCompatActivity implements
 
     private void setupRecyclerView() {
         taskAdapter = new TaskAdapter(this);
+        taskAdapter.setHasStableIds(true);
         binding.tasksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         binding.tasksRecyclerView.setAdapter(taskAdapter);
+        // Add item decoration for spacing
+        binding.tasksRecyclerView.addItemDecoration(
+                new DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
+        );
     }
 
     private void setupCategoryChips() {
@@ -77,8 +86,10 @@ public class MainActivity extends AppCompatActivity implements
         binding.chipAll.setChecked(true);
         binding.chipAll.setMinHeight(getDimensionInPixel(48)); // Ensure touch target size
         binding.chipAll.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
             viewModel.setCurrentCategoryId(-1);
             observeTasksByCategory(-1);
+            updateChipsState(binding.chipAll);
         });
 
         // Observe categories changes
@@ -102,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements
                     v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                     viewModel.setCurrentCategoryId(category.getId());
                     observeTasksByCategory(category.getId());
+                    updateChipsState(chip);
+                    selectedCategory = category;
                 });
 
                 chip.setOnLongClickListener(v -> {
@@ -143,9 +156,10 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void setupFab() {
-        binding.fabAddTask.setOnClickListener(v ->
-                showAddEditTaskDialog(null)
-        );
+        binding.fabAddTask.setOnClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+            showAddEditTaskDialog(null);
+        });
     }
 
     private void observeData() {
@@ -155,18 +169,29 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-    private void observeTasksByCategory(int categoryId) {
-        if (categoryId == -1) {
-            viewModel.getAllTasks().observe(this, tasks -> {
-                updateEmptyState(tasks);
-                taskAdapter.submitList(tasks);
-            });
-        } else {
-            viewModel.getTasksByCategory(categoryId).observe(this, tasks -> {
-                updateEmptyState(tasks);
-                taskAdapter.submitList(tasks);
-            });
+    private void updateChipsState(Chip selectedChip) {
+        for (int i = 0; i < binding.categoryChipGroup.getChildCount(); i++) {
+            View child = binding.categoryChipGroup.getChildAt(i);
+            if (child instanceof Chip) {
+                Chip chip = (Chip) child;
+                if (chip.isCheckable()) {
+                    chip.setChecked(chip == selectedChip);
+                }
+            }
         }
+    }
+
+    private void observeTasksByCategory(int categoryId) {
+        // Remove previous observer
+        if (viewModel.getAllTasks().hasObservers()) {
+            viewModel.getAllTasks().removeObservers(this);
+        }
+
+        LiveData<List<Task>> tasksLiveData = viewModel.getTasksByCategory(categoryId);
+        tasksLiveData.observe(this, tasks -> {
+            updateEmptyState(tasks);
+            taskAdapter.submitList(tasks != null ? new ArrayList<>(tasks) : null);
+        });
     }
 
     private void updateEmptyState(List<?> items) {
@@ -180,7 +205,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void showAddEditTaskDialog(Task task) {
-        AddEditTaskDialogFragment dialog = AddEditTaskDialogFragment.newInstance(task);
+        int categoryId = selectedCategory != null ? selectedCategory.getId() : 0;
+        AddEditTaskDialogFragment dialog = AddEditTaskDialogFragment.newInstance(task, categoryId);
         dialog.show(getSupportFragmentManager(), "task_dialog");
     }
 
@@ -237,11 +263,21 @@ public class MainActivity extends AppCompatActivity implements
     // AddEditTaskDialogFragment.TaskDialogListener implementations
     @Override
     public void onTaskSaved(Task task) {
-        if (task.getId() == 0) {
-            viewModel.insertTask(task.getTitle(), task.getDescription(),
-                    task.getDueDate(), task.getCategoryId());
+        // If no category is selected, use PERSONAL
+        if (task.getCategoryId() == 0) {
+            viewModel.insertTask(
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getDueDate(),
+                    0  // This will trigger the default PERSONAL category logic
+            );
         } else {
-            viewModel.updateTask(task);
+            viewModel.insertTask(
+                    task.getTitle(),
+                    task.getDescription(),
+                    task.getDueDate(),
+                    task.getCategoryId()
+            );
         }
     }
 

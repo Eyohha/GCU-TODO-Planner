@@ -4,6 +4,7 @@ import android.app.Application;
 
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.todo.planner.data.entity.Category;
 import com.todo.planner.data.entity.Task;
@@ -18,6 +19,7 @@ public class TodoViewModel extends AndroidViewModel {
     private TodoRepository repository;
     private LiveData<List<Task>> allTasks;
     private LiveData<List<Category>> allCategories;
+    private MutableLiveData<List<Task>> filteredTasks;
     private int currentCategoryId = -1; // -1 represents "All" tasks
 
     public TodoViewModel(Application application) {
@@ -25,6 +27,7 @@ public class TodoViewModel extends AndroidViewModel {
         repository = new TodoRepository(application);
         allTasks = repository.getAllTasks();
         allCategories = repository.getAllCategories();
+        filteredTasks = new MutableLiveData<>();
     }
 
     // Category operations
@@ -51,13 +54,30 @@ public class TodoViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Task>> getTasksByCategory(int categoryId) {
-        currentCategoryId = categoryId;
-        return repository.getTasksByCategory(categoryId);
+        if (categoryId == -1) {
+            return allTasks;
+        }
+
+        // Create a filtered list
+        repository.getTasksByCategory(categoryId).observeForever(tasks -> {
+            filteredTasks.setValue(tasks);
+        });
+        return filteredTasks;
     }
 
     public void insertTask(String title, String description, String dueDate, int categoryId) {
-        Task task = new Task(title, description, dueDate, categoryId);
-        repository.insertTask(task);
+        // If no category selected, get PERSONAL category ID
+        if (categoryId == 0) {
+            repository.getCategoryByName("PERSONAL", personalCategory -> {
+                if (personalCategory != null) {
+                    Task task = new Task(title, description, dueDate, personalCategory.getId());
+                    repository.insertTask(task);
+                }
+            });
+        } else {
+            Task task = new Task(title, description, dueDate, categoryId);
+            repository.insertTask(task);
+        }
     }
 
     public void updateTask(Task task) {

@@ -16,9 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.todo.planner.R;
 import com.todo.planner.data.entity.Task;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
     private final TaskActionListener listener;
+    private final int VIEW_TYPE_TASK = 0;
+    private static final int MAX_ITEM_COUNT = 50; // Limit for stability
+
 
     public interface TaskActionListener {
         void onTaskCheckedChanged(Task task, boolean isChecked);
@@ -40,10 +46,26 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             public boolean areContentsTheSame(@NonNull Task oldItem, @NonNull Task newItem) {
                 return oldItem.getTitle().equals(newItem.getTitle()) &&
                         oldItem.getDescription().equals(newItem.getDescription()) &&
-                        oldItem.isCompleted() == newItem.isCompleted();
+                        oldItem.isCompleted() == newItem.isCompleted() &&
+                        oldItem.getCategoryId() == newItem.getCategoryId();
             }
         });
         this.listener = listener;
+        setHasStableIds(true);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        Task task = getItem(position);
+        return task.getId();
+    }
+
+    @Override
+    public void submitList(List<Task> list) {
+        if (list != null && list.size() > MAX_ITEM_COUNT) {
+            list = new ArrayList<>(list.subList(0, MAX_ITEM_COUNT));
+        }
+        super.submitList(list != null ? new ArrayList<>(list) : null);
     }
 
     @NonNull

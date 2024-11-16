@@ -28,7 +28,6 @@ public interface CategoryDao {
     @Query("SELECT * FROM categories WHERE id = :categoryId")
     Category getCategoryById(int categoryId);
 
-    // For initial categories (WORK and PERSONAL)
-    @Query("SELECT COUNT(*) FROM categories")
-    int getCategoryCount();
+    @Query("SELECT * FROM categories WHERE name = :name LIMIT 1")
+    Category getCategoryByName(String name);
 }
