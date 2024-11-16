@@ -106,23 +106,40 @@ public class AddEditTaskDialogFragment extends DialogFragment {
             );
             binding.categorySpinner.setAdapter(adapter);
 
-            // Set the category based on existingTask or default to PERSONAL
-            Bundle args = getArguments();
-            if (args != null) {
-                int categoryId = existingTask != null ?
-                        args.getInt("categoryId") :
-                        args.getInt("defaultCategoryId", 0);
-
-                if (categoryId != 0) {
-                    for (int i = 0; i < categories.size(); i++) {
-                        if (categories.get(i).getId() == categoryId) {
-                            binding.categorySpinner.setText(categories.get(i).toString(), false);
-                            break;
-                        }
+            // Pre-fill the spinner with the existing category or default to PERSONAL
+            if (existingTask != null) {
+                for (Category category : categories) {
+                    if (category.getId() == existingTask.getCategoryId()) {
+                        binding.categorySpinner.setText(category.getName(), false);
+                        break;
+                    }
+                }
+            } else {
+                // Default to "PERSONAL" if adding a new task
+                for (Category category : categories) {
+                    if ("PERSONAL".equalsIgnoreCase(category.getName())) {
+                        binding.categorySpinner.setText(category.getName(), false);
+                        break;
                     }
                 }
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private Category getSelectedCategory() {
+        String selectedCategoryName = binding.categorySpinner.getText().toString().trim();
+        ArrayAdapter<Category> adapter = (ArrayAdapter<Category>) binding.categorySpinner.getAdapter();
+
+        if (adapter != null) {
+            for (int i = 0; i < adapter.getCount(); i++) {
+                Category category = adapter.getItem(i);
+                if (category != null && category.getName().equals(selectedCategoryName)) {
+                    return category;
+                }
+            }
+        }
+        return null; // Return null if no matching category is found
     }
 
     private void setupDatePicker() {
@@ -150,32 +167,31 @@ public class AddEditTaskDialogFragment extends DialogFragment {
                 return;
             }
 
-            // Get the selected category
-            Category selectedCategory = null;
-            if (binding.categorySpinner.getAdapter() != null) {
-                selectedCategory = (Category) binding.categorySpinner.getAdapter().getItem(0);
-            }
-
+            // Retrieve the selected category
+            Category selectedCategory = getSelectedCategory();
             if (selectedCategory == null) {
-                binding.categorySpinner.setError("Category is required");
+                binding.categorySpinner.setError("Please select a valid category");
                 return;
             }
 
-            // Update the existing task or create a new one
+            // Update the task or create a new one
             if (existingTask != null) {
                 existingTask.setTitle(title);
                 existingTask.setDescription(description);
                 existingTask.setDueDate(dueDate);
-                existingTask.setCategoryId(selectedCategory.getId()); // Update category
+                existingTask.setCategoryId(selectedCategory.getId()); // Update categoryId
             } else {
                 existingTask = new Task(title, description, dueDate, selectedCategory.getId());
             }
 
-            // Pass the updated task to the listener
+            // Notify the listener
             TaskDialogListener listener = (TaskDialogListener) requireActivity();
             listener.onTaskSaved(existingTask);
             dismiss();
         });
+
+        // Close button logic
+        binding.closeButton.setOnClickListener(v -> dismiss());
     }
 
     @Override

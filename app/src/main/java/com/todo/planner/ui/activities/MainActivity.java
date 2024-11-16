@@ -269,19 +269,19 @@ public class MainActivity extends AppCompatActivity implements
     // AddEditTaskDialogFragment.TaskDialogListener implementations
     @Override
     public void onTaskSaved(Task task) {
-        int categoryId = selectedCategory != null ? selectedCategory.getId() : 0;
         if (task.getId() == 0) {
             // New task
             viewModel.insertTask(
                     task.getTitle(),
                     task.getDescription(),
                     task.getDueDate(),
-                    categoryId
+                    task.getCategoryId() == 0 ? (selectedCategory != null ? selectedCategory.getId() : 0) : task.getCategoryId()
             );
         } else {
-            // Existing task
-            task.setCategoryId(categoryId);
+            // Update existing task
             viewModel.updateTask(task);
+            // Refresh the current category view
+            observeTasksByCategory(viewModel.getCurrentCategoryId());
         }
     }
 
