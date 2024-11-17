@@ -1,5 +1,6 @@
 package com.todo.planner.ui.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,15 +17,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.todo.planner.R;
 import com.todo.planner.data.entity.Task;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
 
     private final TaskActionListener listener;
-    private final int VIEW_TYPE_TASK = 0;
-    private static final int MAX_ITEM_COUNT = 50; // Limit for stability
-
 
     public interface TaskActionListener {
         void onTaskCheckedChanged(Task task, boolean isChecked);
@@ -60,14 +60,6 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
         return task.getId();
     }
 
-    @Override
-    public void submitList(List<Task> list) {
-        if (list != null && list.size() > MAX_ITEM_COUNT) {
-            list = new ArrayList<>(list.subList(0, MAX_ITEM_COUNT));
-        }
-        super.submitList(list != null ? new ArrayList<>(list) : null);
-    }
-
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -99,65 +91,75 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
         }
 
         void bind(Task task) {
+            // Update the UI immediately
+            updateTaskUI(task);
             titleText.setText(task.getTitle());
-
-            if (task.getDescription() != null && !task.getDescription().isEmpty()) {
-                descriptionText.setVisibility(View.VISIBLE);
-                descriptionText.setText(task.getDescription());
-            } else {
-                descriptionText.setVisibility(View.GONE);
-            }
-
+//            if (task.getDescription() != null && !task.getDescription().isEmpty()) {
+//                descriptionText.setVisibility(View.VISIBLE);
+//                descriptionText.setText(task.getDescription());
+//            } else {
+//                descriptionText.setVisibility(View.GONE);
+//            }
+            Log.d("TaskAdapter", "Title visibility: " + titleText.getVisibility());
+            // Prevent duplicate listener invocation
+            checkBox.setOnCheckedChangeListener(null);
             checkBox.setChecked(task.isCompleted());
 
-            if (task.isCompleted()) {
-                dateText.setText("Completed: " + task.getCompletedDate());
-                titleText.setAlpha(0.5f);
-            } else {
-                dateText.setText("Created: " + task.getDueDate());
-                titleText.setAlpha(1.0f);
-            }
-
+            // Handle checkbox clicks
             checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                Log.d("CheckBox", "Checkbox clicked for task: " + task.getTitle() + ", isChecked: " + isChecked);
+
+                // Optimistic UI update
+                updateTaskUI(task);
                 listener.onTaskCheckedChanged(task, isChecked);
             });
 
-            menuButton.setOnClickListener(v -> {
-                PopupMenu popup = new PopupMenu(v.getContext(), v);
-                if (task.isCompleted()) {
-                    popup.inflate(R.menu.menu_completed_task);
-                    popup.setOnMenuItemClickListener(item -> {
-                        int itemId = item.getItemId();
-                        if (itemId == R.id.action_mark_undone) {
-                            listener.onMarkTaskUndone(task);
-                            return true;
-                        } else if (itemId == R.id.action_remove) {
-                            listener.onRemoveCompletedTask(task);
-                            return true;
-                        }
-                        return false;
-                    });
-                } else {
-                    popup.inflate(R.menu.menu_pending_task);
-                    popup.setOnMenuItemClickListener(item -> {
-                        int itemId = item.getItemId();
-                        if (itemId == R.id.action_edit) {
-                            listener.onTaskEdit(task);
-                            return true;
-                        } else if (itemId == R.id.action_delete) {
-                            listener.onTaskDelete(task);
-                            return true;
-                       }
-//
-//                        else if (itemId == R.id.action_add_subtask) {
-//                            listener.onAddSubtask(task);
-//                            return true;
-//                        }
-                        return false;
-                    });
-                }
-                popup.show();
-            });
+            // Setup menu actions
+            menuButton.setOnClickListener(v -> setupTaskMenu(task));
+        }
+
+        private void updateTaskUI(Task task) {
+            if (task.isCompleted()) {
+                titleText.setAlpha(0.5f);
+                dateText.setText("Completed: " + task.getCompletedDate());
+            } else {
+                titleText.setAlpha(1.0f);
+                dateText.setText("Created: " + task.getDueDate());
+            }
+        }
+
+        private void setupTaskMenu(Task task) {
+            PopupMenu popup = new PopupMenu(itemView.getContext(), menuButton);
+
+            if (task.isCompleted()) {
+                popup.inflate(R.menu.menu_completed_task);
+                popup.setOnMenuItemClickListener(item -> {
+                    int itemId = item.getItemId();
+                    if (itemId == R.id.action_mark_undone) {
+                        listener.onMarkTaskUndone(task);
+                        return true;
+                    } else if (itemId == R.id.action_remove) {
+                        listener.onRemoveCompletedTask(task);
+                        return true;
+                    }
+                    return false;
+                });
+            } else {
+                popup.inflate(R.menu.menu_pending_task);
+                popup.setOnMenuItemClickListener(item -> {
+                    int itemId = item.getItemId();
+                    if (itemId == R.id.action_edit) {
+                        listener.onTaskEdit(task);
+                        return true;
+                    } else if (itemId == R.id.action_delete) {
+                        listener.onTaskDelete(task);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            popup.show();
         }
     }
 }

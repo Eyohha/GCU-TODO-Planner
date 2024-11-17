@@ -56,6 +56,18 @@ public class MainActivity extends AppCompatActivity implements
         observeData();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        binding = null;
+        if (viewModel != null) {
+            if (viewModel.getAllTasks().hasObservers()) {
+                viewModel.getAllTasks().removeObservers(this);
+            }
+            viewModel.getRepository().cleanup();
+        }
+    }
+
     private void setupRecyclerView() {
         taskAdapter = new TaskAdapter(this);
         taskAdapter.setHasStableIds(true);
@@ -236,6 +248,9 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onTaskCheckedChanged(Task task, boolean isChecked) {
         viewModel.toggleTaskCompletion(task);
+        // Force refresh the current category view
+        int currentCategoryId = viewModel.getCurrentCategoryId();
+        observeTasksByCategory(currentCategoryId);
     }
 
     @Override
@@ -259,6 +274,9 @@ public class MainActivity extends AppCompatActivity implements
         task.setCompleted(false);
         task.setCompletedDate(null);
         viewModel.updateTask(task);
+        // Force refresh the current category view
+        int currentCategoryId = viewModel.getCurrentCategoryId();
+        observeTasksByCategory(currentCategoryId);
     }
 
     @Override

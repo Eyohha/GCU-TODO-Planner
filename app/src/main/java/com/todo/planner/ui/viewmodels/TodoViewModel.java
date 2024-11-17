@@ -50,7 +50,7 @@ public class TodoViewModel extends AndroidViewModel {
 
     // Task operations
     public LiveData<List<Task>> getAllTasks() {
-        return allTasks;
+        return repository.getAllTasks();
     }
 
 //    public LiveData<List<Task>> getTasksByCategory(int categoryId) {
@@ -112,19 +112,52 @@ public class TodoViewModel extends AndroidViewModel {
         repository.deleteTask(task);
     }
 
+//    public void toggleTaskCompletion(Task task) {
+//        try {
+//            boolean newStatus = !task.isCompleted();
+//            String completedDate = null;
+//
+//            if (newStatus) {
+//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+//                completedDate = sdf.format(new Date());
+//            }
+//
+//            Task updatedTask = new Task(
+//                    task.getTitle(),
+//                    task.getDescription(),
+//                    task.getDueDate(),
+//                    task.getCategoryId()
+//            );
+//            updatedTask.setId(task.getId());
+//            updatedTask.setCompleted(newStatus);
+//            updatedTask.setCompletedDate(completedDate);
+//
+//            repository.updateTask(updatedTask);
+//
+//            // Force refresh if in category view
+//            if (currentCategoryId > -1) {
+//                filteredTasks.setValue(repository.getTasksByCategory(currentCategoryId).getValue());
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
     public void toggleTaskCompletion(Task task) {
+        // Toggle the completion status
         boolean newStatus = !task.isCompleted();
-        String completedDate = null;
+        String completedDate = newStatus
+                ? new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date())
+                : null;
 
-        if (newStatus) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            completedDate = sdf.format(new Date());
-        }
-
+        // Update the task fields directly
         task.setCompleted(newStatus);
         task.setCompletedDate(completedDate);
+
+        // Update the task in the repository
         repository.updateTask(task);
     }
+
 
     public int getCurrentCategoryId() {
         return currentCategoryId;
@@ -132,5 +165,15 @@ public class TodoViewModel extends AndroidViewModel {
 
     public void setCurrentCategoryId(int categoryId) {
         this.currentCategoryId = categoryId;
+    }
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        allTasks = null;
+        allCategories = null;
+        filteredTasks = null;
+    }
+    public TodoRepository getRepository() {
+        return repository;
     }
 }
