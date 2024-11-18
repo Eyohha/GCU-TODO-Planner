@@ -94,12 +94,12 @@ public class TaskAdapter extends ListAdapter<Task, TaskAdapter.TaskViewHolder> {
             // Update the UI immediately
             updateTaskUI(task);
             titleText.setText(task.getTitle());
-//            if (task.getDescription() != null && !task.getDescription().isEmpty()) {
-//                descriptionText.setVisibility(View.VISIBLE);
-//                descriptionText.setText(task.getDescription());
-//            } else {
-//                descriptionText.setVisibility(View.GONE);
-//            }
+            if (task.getDescription() != null && !task.getDescription().isEmpty()) {
+                descriptionText.setVisibility(View.VISIBLE);
+                descriptionText.setText(task.getDescription());
+            } else {
+                descriptionText.setVisibility(View.GONE);
+            }
             Log.d("TaskAdapter", "Title visibility: " + titleText.getVisibility());
             // Prevent duplicate listener invocation
             checkBox.setOnCheckedChangeListener(null);
