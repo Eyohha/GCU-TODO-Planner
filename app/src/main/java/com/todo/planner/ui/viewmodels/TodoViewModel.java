@@ -2,6 +2,7 @@ package com.todo.planner.ui.viewmodels;
 
 import android.app.Application;
 
+import androidx.annotation.VisibleForTesting;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -30,6 +31,14 @@ public class TodoViewModel extends AndroidViewModel {
         filteredTasks = new MutableLiveData<>();
     }
 
+    @VisibleForTesting  // Add this annotation to indicate it's for testing
+    public void setRepository(TodoRepository repository) {
+        this.repository = repository;
+        allTasks = repository.getAllTasks();
+        allCategories = repository.getAllCategories();
+        filteredTasks = new MutableLiveData<>();
+    }
+
     // Category operations
     public LiveData<List<Category>> getAllCategories() {
         return allCategories;
@@ -53,40 +62,9 @@ public class TodoViewModel extends AndroidViewModel {
         return repository.getAllTasks();
     }
 
-//    public LiveData<List<Task>> getTasksByCategory(int categoryId) {
-//        currentCategoryId = categoryId;  // Save the current category
-//        if (categoryId == -1) {
-//            return allTasks;
-//        }
-//        return repository.getTasksByCategory(categoryId);
-//    }
-
     public LiveData<List<Task>> getTasksByCategory(int categoryId) {
         return repository.getTasksByCategory(categoryId);
     }
-
-//    public void insertTask(String title, String description, String dueDate, int categoryId) {
-//        // If no category selected, use the current category or default to PERSONAL
-//        if (categoryId == 0) {
-//            if (currentCategoryId > 0) {
-//                // Use currently selected category
-//                Task task = new Task(title, description, dueDate, currentCategoryId);
-//                repository.insertTask(task);
-//            } else {
-//                // Default to PERSONAL category
-//                repository.getCategoryByName("PERSONAL", personalCategory -> {
-//                    if (personalCategory != null) {
-//                        Task task = new Task(title, description, dueDate, personalCategory.getId());
-//                        repository.insertTask(task);
-//                    }
-//                });
-//            }
-//        } else {
-//            // Use specified category
-//            Task task = new Task(title, description, dueDate, categoryId);
-//            repository.insertTask(task);
-//        }
-//    }
 
     public void insertTask(String title, String description, String dueDate, int categoryId) {
         if (categoryId == 0) {
@@ -111,37 +89,6 @@ public class TodoViewModel extends AndroidViewModel {
     public void deleteTask(Task task) {
         repository.deleteTask(task);
     }
-
-//    public void toggleTaskCompletion(Task task) {
-//        try {
-//            boolean newStatus = !task.isCompleted();
-//            String completedDate = null;
-//
-//            if (newStatus) {
-//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-//                completedDate = sdf.format(new Date());
-//            }
-//
-//            Task updatedTask = new Task(
-//                    task.getTitle(),
-//                    task.getDescription(),
-//                    task.getDueDate(),
-//                    task.getCategoryId()
-//            );
-//            updatedTask.setId(task.getId());
-//            updatedTask.setCompleted(newStatus);
-//            updatedTask.setCompletedDate(completedDate);
-//
-//            repository.updateTask(updatedTask);
-//
-//            // Force refresh if in category view
-//            if (currentCategoryId > -1) {
-//                filteredTasks.setValue(repository.getTasksByCategory(currentCategoryId).getValue());
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     public void toggleTaskCompletion(Task task) {
         // Toggle the completion status

@@ -78,16 +78,6 @@ public class TodoRepository {
 
     private final Map<Integer, List<Task>> taskCache = new ConcurrentHashMap<>();
 
-//    public void insertTask(Task task) {
-//        executorService.execute(() -> {
-//            taskDao.insert(task);
-//            // Update cache
-//            List<Task> cachedTasks = taskCache.getOrDefault(task.getCategoryId(), new ArrayList<>());
-//            cachedTasks.add(task);
-//            taskCache.put(task.getCategoryId(), cachedTasks);
-//        });
-//    }
-
     public void insertTask(Task task) {
         executorService.execute(() -> {
             taskDao.insert(task);

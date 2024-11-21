@@ -15,7 +15,7 @@ import java.util.List;
 @Dao
 public interface CategoryDao {
     @Insert
-    void insert(Category category);
+    long insert(Category category);
 
     @Update
     void update(Category category);
