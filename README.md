@@ -21,17 +21,18 @@ TODO Planner is a native Android task management application designed to help us
 
  Project Structure
 com.todo.planner/
-├── data/
-│   ├── dao/
-│   ├── database/
-│   ├── entity/
-│   └── repository/
-├── ui/
-│   ├── activities/
-│   ├── adapters/
-│   ├── dialogs/
-│   └── viewmodels/
-└── utils/
+data/
+ dao/
+ database/
+ entity/
+ repository/
+ 
+ui/
+ activities/
+ adapters/
+ dialogs/
+ viewmodels/
+ utils/
 
  Setup Instructions
 1. Clone the repository
