@@ -19,27 +19,11 @@ TODO Planner is a native Android task management application designed to help us
 - Database: Room Persistence Library
 - Development Environment: Android Studio Hedgehog | 2023.1.1
 
- Project Structure
-com.todo.planner/
-data/
- dao/
- database/
- entity/
- repository/
- 
-ui/
- activities/
- adapters/
- dialogs/
- viewmodels/
- utils/
-
  Setup Instructions
-1. Clone the repository
-git clone https://github.com/yourusername/todo-planner.git
-2. Open project in Android Studio
-3. Sync project with Gradle files
-4. Run the app on an emulator or physical device
+1. Clone the repository - git clone https://github.com/yourusername/todo-planner.git
+3. Open project in Android Studio
+4. Sync project with Gradle files
+5. Run the app on an emulator or physical device
 
  Key Components
 Database Schema
