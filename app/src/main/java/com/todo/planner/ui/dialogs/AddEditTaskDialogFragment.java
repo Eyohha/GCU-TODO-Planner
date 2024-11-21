@@ -197,6 +197,9 @@ public class AddEditTaskDialogFragment extends DialogFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null;
+        binding = null;  // Clean up the binding
+        if (viewModel != null) {
+            viewModel.getAllCategories().removeObservers(this);
+        }
     }
 }

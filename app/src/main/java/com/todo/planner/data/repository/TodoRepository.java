@@ -1,5 +1,7 @@
 package com.todo.planner.data.repository;
 
+import static com.todo.planner.data.database.TodoDatabase.databaseWriteExecutor;
+
 import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
@@ -41,26 +43,26 @@ public class TodoRepository {
     }
 
     public void getCategoryByName(String name, OnCategoryFoundListener listener) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             Category category = categoryDao.getCategoryByName(name);
             new Handler(Looper.getMainLooper()).post(() -> listener.onCategoryFound(category));
         });
     }
 
     public void insertCategory(Category category) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             categoryDao.insert(category);
         });
     }
 
     public void updateCategory(Category category) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             categoryDao.update(category);
         });
     }
 
     public void deleteCategory(Category category) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             categoryDao.delete(category);
         });
     }
@@ -75,16 +77,6 @@ public class TodoRepository {
     }
 
     private final Map<Integer, List<Task>> taskCache = new ConcurrentHashMap<>();
-
-//    public void insertTask(Task task) {
-//        executorService.execute(() -> {
-//            taskDao.insert(task);
-//            // Update cache
-//            List<Task> cachedTasks = taskCache.getOrDefault(task.getCategoryId(), new ArrayList<>());
-//            cachedTasks.add(task);
-//            taskCache.put(task.getCategoryId(), cachedTasks);
-//        });
-//    }
 
     public void insertTask(Task task) {
         executorService.execute(() -> {
@@ -101,20 +93,27 @@ public class TodoRepository {
     }
 
     public void updateTask(Task task) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             taskDao.update(task);
         });
     }
 
     public void deleteTask(Task task) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             taskDao.delete(task);
         });
     }
 
     public void updateTaskStatus(int taskId, boolean isCompleted, String completedDate) {
-        TodoDatabase.databaseWriteExecutor.execute(() -> {
+        databaseWriteExecutor.execute(() -> {
             taskDao.updateTaskStatus(taskId, isCompleted, completedDate);
         });
     }
+
+    public void cleanup() {
+        if (databaseWriteExecutor != null && !databaseWriteExecutor.isShutdown()) {
+            databaseWriteExecutor.shutdown();
+        }
+    }
+
 }
