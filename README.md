@@ -82,5 +82,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 Contact
 Eyoatam Erkihun
 Erkihun.eyoatam@gmail.com
-
-Note: This project was developed as part of a Master's Degree program in Software Development.
